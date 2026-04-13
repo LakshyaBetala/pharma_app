@@ -1,65 +1,125 @@
-import Image from "next/image";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import data from "../../data.json"
 
-export default function Home() {
+export default function Dashboard() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="min-h-screen bg-white text-slate-800 p-8">
+      <div className="max-w-6xl mx-auto">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight text-slate-900">Medical Admin Workspace</h1>
+            <p className="text-slate-500 mt-1">Manage B2B users, credit, and product inventory.</p>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+
+        <Tabs defaultValue="users" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 max-w-[400px] mb-8 bg-slate-100">
+            <TabsTrigger value="users" className="data-[state=active]:bg-white">Users & Credit</TabsTrigger>
+            <TabsTrigger value="inventory" className="data-[state=active]:bg-white">Inventory</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="users">
+            <Card className="border-slate-200 shadow-sm">
+              <CardHeader>
+                <CardTitle className="text-slate-800">User Management</CardTitle>
+                <CardDescription className="text-slate-500">
+                  Review registrations, approve accounts, and adjust credit balances.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow className="border-slate-200 hover:bg-slate-50/50">
+                      <TableHead className="text-slate-600 font-semibold">Store Name</TableHead>
+                      <TableHead className="text-slate-600 font-semibold">Phone</TableHead>
+                      <TableHead className="text-slate-600 font-semibold">Status</TableHead>
+                      <TableHead className="text-slate-600 font-semibold text-right">Credit Balance</TableHead>
+                      <TableHead className="text-slate-600 font-semibold text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {data.users.map((user) => (
+                      <TableRow key={user.phone} className="border-slate-200 hover:bg-slate-50/50">
+                        <TableCell className="font-medium text-slate-900">{user.store_name}</TableCell>
+                        <TableCell className="text-slate-600">{user.phone}</TableCell>
+                        <TableCell>
+                          {user.is_approved ? (
+                            <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">Active</Badge>
+                          ) : (
+                            <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">Pending</Badge>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right font-medium text-slate-900">
+                          ₹{user.credit_balance.toLocaleString('en-IN')}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            {!user.is_approved ? (
+                              <Button size="sm" className="bg-emerald-500 hover:bg-emerald-600 text-white font-medium shadow-sm transition-colors">
+                                Approve
+                              </Button>
+                            ) : null}
+                            <Button size="sm" variant="outline" className="border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900">
+                              Adjust Credit
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="inventory">
+            <Card className="border-slate-200 shadow-sm">
+              <CardHeader>
+                <CardTitle className="text-slate-800">Product Inventory</CardTitle>
+                <CardDescription className="text-slate-500">
+                  Manage medical supplies, view stock levels and pricing.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow className="border-slate-200 hover:bg-slate-50/50">
+                      <TableHead className="text-slate-600 font-semibold">Name</TableHead>
+                      <TableHead className="text-slate-600 font-semibold">Company</TableHead>
+                      <TableHead className="text-slate-600 font-semibold text-right">Price</TableHead>
+                      <TableHead className="text-slate-600 font-semibold text-right">Stock</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {data.products.map((product) => (
+                      <TableRow key={product.id} className="border-slate-200 hover:bg-slate-50/50">
+                        <TableCell className="font-medium text-slate-900">{product.name}</TableCell>
+                        <TableCell className="text-slate-600">{product.company}</TableCell>
+                        <TableCell className="text-right font-medium text-slate-900">
+                          ₹{product.price.toLocaleString('en-IN')}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Badge variant="outline" className={
+                            product.stock > 10 
+                              ? "bg-slate-100 text-slate-700 border-slate-200" 
+                              : "bg-red-50 text-red-700 border-red-200"
+                          }>
+                            {product.stock} units
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
-  );
+  )
 }
