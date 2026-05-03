@@ -1,7 +1,8 @@
 {
   "users": [
     { "phone": "9999999999", "store_name": "City Pharma", "is_approved": true, "credit_balance": 15000, "credit_limit": 50000 },
-    { "phone": "8888888888", "store_name": "LifeCare Meds", "is_approved": false, "credit_balance": 0, "credit_limit": 0 }
+    { "phone": "8888888888", "store_name": "LifeCare Meds", "is_approved": false, "credit_balance": 0, "credit_limit": 0 },
+    { "phone": "8072116397", "store_name": "Upkem Medical", "is_approved": true, "credit_balance": 0, "credit_limit": 50000 }
   ],
   "products": [
     {

@@ -1,10 +1,12 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import {
+  Alert,
   BackHandler,
   Dimensions,
   FlatList,
   Image,
   Modal,
+  Platform,
   Pressable,
   SafeAreaView,
   ScrollView,
@@ -58,8 +60,10 @@ type Order = {
   created_at: string;
 };
 
-// Change to your Next.js dev server IP for physical devices (e.g. http://192.168.x.x:3000)
-const API_BASE = 'http://localhost:3000';
+// Android emulator uses 10.0.2.2 to reach host localhost.
+// For a physical device, replace with your computer's LAN IP (e.g. http://192.168.1.x:3000).
+const API_BASE =
+  Platform.OS === 'android' ? 'http://10.0.2.2:3000' : 'http://localhost:3000';
 
 // ─── Theme ────────────────────────────────────────────────────────────────────
 const C = {
@@ -1212,20 +1216,51 @@ function PendingApprovalScreen() {
 }
 
 // ─── Login Screen ──────────────────────────────────────────────────────────────
+function generateOtp(): string {
+  return String(Math.floor(100000 + Math.random() * 900000));
+}
+
 function LoginScreen({ navigation }: { navigation: Navigation }) {
   const [phone, setPhone] = useState('');
+  const [step, setStep] = useState<'phone' | 'otp'>('phone');
+  const [otp, setOtp] = useState('');
+  const [sentOtp, setSentOtp] = useState('');
   const [error, setError] = useState('');
   const setUser = useStore((s) => s.setUser);
 
-  const handleLogin = () => {
+  const handleSendOtp = () => {
     setError('');
     const found = (data.users as User[]).find((u) => u.phone === phone.trim());
-    if (!found) { setError('Phone number not registered. Contact your distributor.'); return; }
+    if (!found) {
+      setError('Phone number not registered. Contact your distributor.');
+      return;
+    }
+    const code = generateOtp();
+    setSentOtp(code);
+    setStep('otp');
+    // In production this would trigger an SMS. For now show it via alert.
+    Alert.alert('OTP (Development)', `Your OTP is: ${code}`, [{ text: 'OK' }]);
+  };
+
+  const handleVerifyOtp = () => {
+    setError('');
+    if (otp.trim() !== sentOtp) {
+      setError('Incorrect OTP. Please try again.');
+      return;
+    }
+    const found = (data.users as User[]).find((u) => u.phone === phone.trim())!;
     setUser(found);
     navigation.reset({
       index: 0,
       routes: [{ name: found.is_approved ? 'MainTabs' : 'PendingApproval' }],
     });
+  };
+
+  const handleBack = () => {
+    setStep('phone');
+    setOtp('');
+    setError('');
+    setSentOtp('');
   };
 
   return (
@@ -1238,32 +1273,69 @@ function LoginScreen({ navigation }: { navigation: Navigation }) {
       </View>
 
       <View style={s.loginCard}>
-        <Text style={s.loginCardTitle}>Welcome Back</Text>
-        <Text style={s.loginCardSub}>Enter your registered phone number to continue</Text>
+        {step === 'phone' ? (
+          <>
+            <Text style={s.loginCardTitle}>Welcome Back</Text>
+            <Text style={s.loginCardSub}>Enter your registered phone number to receive an OTP</Text>
 
-        <TextInput
-          style={[s.loginInput, error ? s.loginInputError : null]}
-          placeholder="10-digit phone number"
-          placeholderTextColor={C.textPlaceholder}
-          keyboardType="phone-pad"
-          value={phone}
-          onChangeText={(v) => { setPhone(v); setError(''); }}
-          maxLength={10}
-        />
-        {error ? <Text style={s.loginError}>{error}</Text> : null}
+            <TextInput
+              style={[s.loginInput, error ? s.loginInputError : null]}
+              placeholder="10-digit phone number"
+              placeholderTextColor={C.textPlaceholder}
+              keyboardType="phone-pad"
+              value={phone}
+              onChangeText={(v) => { setPhone(v); setError(''); }}
+              maxLength={10}
+            />
+            {error ? <Text style={s.loginError}>{error}</Text> : null}
 
-        <TouchableOpacity
-          style={[s.loginBtn, phone.length < 10 && s.loginBtnDisabled]}
-          onPress={handleLogin}
-          disabled={phone.length < 10}
-          activeOpacity={0.85}
-        >
-          <Text style={s.loginBtnTxt}>Login</Text>
-        </TouchableOpacity>
+            <TouchableOpacity
+              style={[s.loginBtn, phone.length < 10 && s.loginBtnDisabled]}
+              onPress={handleSendOtp}
+              disabled={phone.length < 10}
+              activeOpacity={0.85}
+            >
+              <Text style={s.loginBtnTxt}>Send OTP</Text>
+            </TouchableOpacity>
 
-        <Text style={s.loginHint}>
-          New store? Contact your MedPlus representative to register.
-        </Text>
+            <Text style={s.loginHint}>
+              New store? Contact your MedPlus representative to register.
+            </Text>
+          </>
+        ) : (
+          <>
+            <TouchableOpacity onPress={handleBack} style={{ marginBottom: 16 }}>
+              <Text style={{ color: C.green, fontWeight: '700', fontSize: 14 }}>← Change number</Text>
+            </TouchableOpacity>
+            <Text style={s.loginCardTitle}>Verify OTP</Text>
+            <Text style={s.loginCardSub}>Enter the 6-digit OTP sent to +91 {phone}</Text>
+
+            <TextInput
+              style={[s.loginInput, error ? s.loginInputError : null]}
+              placeholder="6-digit OTP"
+              placeholderTextColor={C.textPlaceholder}
+              keyboardType="number-pad"
+              value={otp}
+              onChangeText={(v) => { setOtp(v); setError(''); }}
+              maxLength={6}
+              autoFocus
+            />
+            {error ? <Text style={s.loginError}>{error}</Text> : null}
+
+            <TouchableOpacity
+              style={[s.loginBtn, otp.length < 6 && s.loginBtnDisabled]}
+              onPress={handleVerifyOtp}
+              disabled={otp.length < 6}
+              activeOpacity={0.85}
+            >
+              <Text style={s.loginBtnTxt}>Verify & Login</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={{ marginTop: 16, alignItems: 'center' }} onPress={handleSendOtp}>
+              <Text style={{ color: C.greenLight, fontSize: 13, fontWeight: '600' }}>Resend OTP</Text>
+            </TouchableOpacity>
+          </>
+        )}
       </View>
     </SafeAreaView>
   );
