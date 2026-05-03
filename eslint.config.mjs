@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Mobile app has its own toolchain (Expo/Metro); don't apply Next.js web rules there
+    "mobile/**",
   ]),
 ]);
 
